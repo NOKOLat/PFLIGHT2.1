@@ -37,9 +37,9 @@ bool StateManager::init() {
     }
 
     // ISRManager に SBUS を登録し、DMA受信を開始する
-   // ISRManager::registerSBUS(&state_context_.sbus_receiver, state_context_.sbus_uart);
+    ISRManager::registerSBUS(&state_context_.sbus_receiver, state_context_.debug_sbus_uart);
 
-    ISRManager::registerSBUS(&state_context_.sbus_receiver, state_context_.sbus_uart);
+    //ISRManager::registerSBUS(&state_context_.sbus_receiver, state_context_.sbus_uart);
     state_context_.publish_log("[StateManager] SBUS Ready");
 
     return true;
