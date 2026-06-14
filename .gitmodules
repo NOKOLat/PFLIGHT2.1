@@ -11,9 +11,6 @@
 [submodule "Core/Lib/STM32_Motor-Servo_Driver"]
 	path = Core/Lib/STM32_Motor-Servo_Driver
 	url = https://github.com/NOKOLat/STM32_Motor-Servo_Driver.git
-[submodule "Core/Lib/Motor_Servo_Driver"]
-	path = Core/Lib/Motor_Servo_Driver
-	url = https://github.com/NOKOLat/STM32_Motor-Servo_Driver.git
 [submodule "Core/Lib/1DoF_PID"]
 	path = Core/Lib/1DoF_PID
 	url = https://github.com/NOKOLat/1DoF_PID.git
