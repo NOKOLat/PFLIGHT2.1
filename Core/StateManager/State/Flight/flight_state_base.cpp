@@ -1,5 +1,6 @@
 #include "../state_headers.hpp"
 #include <cmath>
+#include "STM32_DPS368/util/dps_config.h"
 
 
 StateError FlightStateBase::init(StateContext& context) {
@@ -47,6 +48,27 @@ StateError FlightStateBase::update(StateContext& context) {
 //            context.angle.roll,
 //            context.angle.pitch,
 //            context.angle.yaw);
+
+    if (context.baro.has_value()) {
+
+        float temp_buffer[DPS__FIFO_SIZE] = {};
+        float pressure_buffer[DPS__FIFO_SIZE] = {};
+        uint8_t temp_count = DPS__FIFO_SIZE;
+        uint8_t pressure_count = DPS__FIFO_SIZE;
+
+        if (context.baro->getContResults(temp_buffer, temp_count, pressure_buffer, pressure_count) == DPS__SUCCEEDED) {
+
+            if (temp_count > 0U) {
+
+                context.temperature_c = temp_buffer[temp_count - 1U];
+            }
+
+            if (pressure_count > 0U) {
+
+                context.pressure_pa = pressure_buffer[pressure_count - 1U];
+            }
+        }
+    }
 
     // 派生クラスの処理（throttle・pid_outputをcontextに書き込む）
     StateError err = onUpdate(context);

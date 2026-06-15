@@ -13,6 +13,7 @@
 #include "usart.h"
 #include "gpio.h"
 #include "ICM42688P/ICM42688P.h"
+#include "STM32_DPS368/Dps3xx.h"
 #include "IMU_EKF/attitude_ekf.h"
 #include "../../Utility/PwmManager/pwm_manager.hpp"
 #include "../../Utility/CascadePID/cascade_pid_manager.hpp"
@@ -38,6 +39,11 @@ struct StateContext {
     std::optional<ICM42688P> imu = std::nullopt;
     std::array<float, 3> accel_data = {};
     std::array<float, 3> gyro_data = {};
+
+    // DPS368 pressure sensor (initialized in InitState)
+    std::optional<Dps3xx> baro = std::nullopt;
+    float pressure_pa = 0.0f;
+    float temperature_c = 0.0f;
 
     // EKF（遅延初期化: FlightStateBase::initでemplace）
     std::optional<AttitudeEKF_t> ekf = std::nullopt;

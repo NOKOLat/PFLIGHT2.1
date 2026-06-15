@@ -3,6 +3,7 @@
 #include "../Config/sensor_config.hpp"
 #include "../../../Utility/PwmManager/dualcopter_pwm_manager.hpp"
 #include "i2c.h"
+#include "STM32_DPS368/util/dps_config.h"
 
 // icm42688p用のSPI書き込み関数
 static uint8_t icm_spi_write(uint8_t reg_addr, uint8_t* tx_buffer, uint8_t len) {
@@ -59,6 +60,19 @@ StateError InitState::update(StateContext& context) {
     if (context.imu->GyroConfig(::ICM42688P::GYRO_MODE::LowNoize, ::ICM42688P::GYRO_SCALE::Dps0250, ::ICM42688P::GYRO_ODR::ODR00100hz, ::ICM42688P::GYRO_DLPF::ODR40) != 0) {
 
         printf("ICM42688p Gyro Config Failed\n");
+        return StateError::UPDATE_FAILED_CRITICAL;
+    }
+
+    context.baro.emplace();
+    context.baro->begin(&hi2c1);
+
+    if (context.baro->startMeasureBothCont(
+    		DPS__MEASUREMENT_RATE_128,
+            DPS__OVERSAMPLING_RATE_1,
+            DPS__MEASUREMENT_RATE_128,
+            DPS__OVERSAMPLING_RATE_1) != DPS__SUCCEEDED) {
+
+        printf("DPS368 Init Failed\n");
         return StateError::UPDATE_FAILED_CRITICAL;
     }
 
