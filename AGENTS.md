@@ -1,8 +1,7 @@
-# Repository Instructions
+# 実行手順
 
-This repository is an STM32CubeIDE firmware project.
-
-## Existing Agent Files
-
-- Legacy agent files live under `agents/stm32_build_executor/`.
-- They are kept as project reference material, but this `AGENTS.md` is the default instruction file for Codex.
+1. 指示の確認
+2. STM32_AI/CODING_GUIDE.md の内容を確認
+3. 実装
+4. コードのスタイルを STM32_AI/CODING_GUIDE.md に合わせる
+5. ビルド（エラーを修正する）
