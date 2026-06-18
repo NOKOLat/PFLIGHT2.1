@@ -51,24 +51,26 @@ StateError FlightStateBase::update(StateContext& context) {
 
     if (context.baro.has_value()) {
 
-        float temp_buffer[DPS__FIFO_SIZE] = {};
-        float pressure_buffer[DPS__FIFO_SIZE] = {};
-        uint8_t temp_count = DPS__FIFO_SIZE;
-        uint8_t pressure_count = DPS__FIFO_SIZE;
+        float temperature_c = 0.0f;
+        float pressure_pa = 0.0f;
+        bool has_temperature = false;
+        bool has_pressure = false;
 
-        if (context.baro->getContResults(temp_buffer, temp_count, pressure_buffer, pressure_count) == DPS__SUCCEEDED) {
+        if (context.baro->getSingleContResult(temperature_c, has_temperature, pressure_pa, has_pressure) == DPS__SUCCEEDED) {
 
-            if (temp_count > 0U) {
+            if (has_temperature) {
 
-                context.temperature_c = temp_buffer[temp_count - 1U];
+                context.temperature_c = temperature_c;
             }
 
-            if (pressure_count > 0U) {
+            if (has_pressure) {
 
-                context.pressure_pa = pressure_buffer[pressure_count - 1U];
+                context.pressure_pa = pressure_pa;
             }
         }
     }
+
+    printf("baro %f, temp %f\n", context.pressure_pa, context.temperature_c);
 
     // 派生クラスの処理（throttle・pid_outputをcontextに書き込む）
     StateError err = onUpdate(context);

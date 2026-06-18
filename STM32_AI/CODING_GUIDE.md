@@ -187,12 +187,6 @@ uint8_t error = 0;
 command = gyro_dlpf_tmp | (accel_dlpf_tmp << 4);
 ```
 
-ただし既存コードには、空白が詰まっている箇所もある。
-
-```cpp
-accel_scale_value = (16.0 / pow(2,(uint8_t)accel_scale) ) / 32768 * 9.8;
-```
-
 新規コードでは、読みやすさのために以下のようにそろえる。
 
 ```cpp
