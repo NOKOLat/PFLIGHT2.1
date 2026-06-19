@@ -48,7 +48,7 @@ class StateFactory {
 
                 // --- Error ---
                 case StateID::ERROR:
-                    return std::make_unique<ErrorState>();
+                    return std::make_unique<EmergencyStopState>();
 
                 // --- フォールバック専用 ---
                 case StateID::EMERGENCY_STOP:

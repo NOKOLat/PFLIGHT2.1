@@ -3,11 +3,14 @@
 
 StateError CalibrationState::init(StateContext& context) {
 
+	printf("calib0\n");
     return StateError::NONE;
 }
 
 
 StateError CalibrationState::update(StateContext& context) {
+
+	printf("calib\n");
 
     // icm42688pのキャリブレーション
     context.imu->Calibration(1000);

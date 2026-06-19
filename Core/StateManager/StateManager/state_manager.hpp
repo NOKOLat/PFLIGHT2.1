@@ -2,6 +2,7 @@
 #define STATE_MANAGER_HPP
 
 #include <memory>
+#include <string>
 #include "../StateInterface/state_interface.hpp"
 #include "../common/state_utility.hpp"
 #include "../common/state_context.hpp"
@@ -30,10 +31,9 @@ class StateManager {
 
         StateID                         init_state_id_;
         std::unique_ptr<StateInterface> current_state_;
-        std::unique_ptr<StateInterface> fallback_emergency_stop_;
-        bool                            use_fallback_ = false;
         StateContext                    state_context_;
 
+        bool updateSbusStatus();
         StateChangeResult changeState(StateID state_id);
 };
 

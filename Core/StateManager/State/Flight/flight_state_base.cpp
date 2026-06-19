@@ -70,8 +70,6 @@ StateError FlightStateBase::update(StateContext& context) {
         }
     }
 
-    printf("baro %f, temp %f\n", context.pressure_pa, context.temperature_c);
-
     // 派生クラスの処理（throttle・pid_outputをcontextに書き込む）
     StateError err = onUpdate(context);
 

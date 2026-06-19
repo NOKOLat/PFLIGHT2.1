@@ -9,7 +9,7 @@
 #include <array>
 #include "stm32f7xx_hal.h"
 #include "SBUS/sbus.h"
-#include "sbus_rescaler.hpp"
+#include "SBUS/sbus_rescaler.hpp"
 #include "usart.h"
 #include "gpio.h"
 #include "ICM42688P/ICM42688P.h"
