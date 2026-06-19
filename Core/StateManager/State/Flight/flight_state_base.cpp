@@ -1,5 +1,6 @@
 #include "../state_headers.hpp"
 #include <cmath>
+#include "../../../Config/system_config.hpp"
 #include "STM32_DPS368/util/dps_config.h"
 
 
@@ -48,6 +49,10 @@ StateError FlightStateBase::update(StateContext& context) {
     context.angle.pitch = AttitudeEKF_GetPitch(&context.ekf.value()) * RAD_TO_DEG;
     context.angle.yaw   = AttitudeEKF_GetYaw(&context.ekf.value())   * RAD_TO_DEG;
 
+    float angle_data[3] = {context.angle.roll, context.angle.pitch, context.angle.yaw};
+    context.altitude_estimator->Update(context.pressure_pa, context.accel_data.data(), angle_data, SystemConfig::MAIN_LOOP_PERIOD_S);
+    context.altitude_estimator->GetData(context.altitude_data.data());
+
     // 派生クラスの処理（throttle・pid_outputをcontextに書き込む）
     StateError err = onUpdate(context);
     if (err != StateError::NONE) {
@@ -69,6 +74,9 @@ StateError FlightStateBase::update(StateContext& context) {
 
     //debug pressure
     //context.publish_log("[FlightStateBase] Pressure: %f Pa, Temperature: %f °C", context.pressure_pa, context.temperature_c);
+
+    //debug altitude
+    printf("[FlightStateBase] Altitude: %.3f m, Velocity: %.3f m/s, Accel: %.3f m/s^2\n", context.altitude_data[0], context.altitude_data[1], context.altitude_data[2]);
 
     return StateError::NONE;
 }

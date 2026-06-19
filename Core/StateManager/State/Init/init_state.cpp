@@ -76,6 +76,11 @@ StateError InitState::update(StateContext& context) {
         return StateError::UPDATE_FAILED_CRITICAL;
     }
 
+    // Altitude estimator 初期化
+    context.altitude_estimator.emplace();
+    context.altitude_estimator->Init();
+    context.altitude_data.fill(0.0f);
+
     constexpr float loop_time_s = SystemConfig::MAIN_LOOP_PERIOD_S;
 
     // EKF 遅延初期化

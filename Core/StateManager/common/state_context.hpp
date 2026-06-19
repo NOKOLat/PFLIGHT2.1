@@ -14,6 +14,7 @@
 #include "gpio.h"
 #include "ICM42688P/ICM42688P.h"
 #include "STM32_DPS368/Dps3xx.h"
+#include "Altitude_estimation/altitude.h"
 #include "IMU_EKF/attitude_ekf.h"
 #include "../../Utility/PwmManager/pwm_manager.hpp"
 #include "../../Utility/CascadePID/cascade_pid_manager.hpp"
@@ -44,6 +45,10 @@ struct StateContext {
     std::optional<Dps3xx> baro = std::nullopt;
     float pressure_pa = 0.0f;
     float temperature_c = 0.0f;
+
+    // Altitude estimator (initialized in InitState)
+    std::optional<Altitude> altitude_estimator = std::nullopt;
+    std::array<float, 3> altitude_data = {};  // [altitude(m), velocity(m/s), accel(m/s^2)]
 
     // EKF（遅延初期化: FlightStateBase::initでemplace）
     std::optional<AttitudeEKF_t> ekf = std::nullopt;
