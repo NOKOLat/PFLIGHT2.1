@@ -22,21 +22,25 @@ StateError FlightStateBase::update(StateContext& context) {
     constexpr float RAD_TO_DEG = 57.29577951308232f;
     constexpr float DEG_TO_RAD = 0.017453292519943295f;
 
-    // センサーデータを取得（加速度: m/s², ジャイロ: dps）
-    context.imu->GetData(context.accel_data.data(), context.gyro_data.data());
+    // imuデータを取得（加速度: m/s², ジャイロ: dps）
+    uint8_t ret = context.imu->GetData(context.accel_data.data(), context.gyro_data.data());
+    if(ret != 0){
 
-//    printf("Accel: [%.2f, %.2f, %.2f] m/s^2, Gyro: [%.2f, %.2f, %.2f] dps\n",
-//            context.accel_data[0], context.accel_data[1], context.accel_data[2],
-//            context.gyro_data[0], context.gyro_data[1], context.gyro_data[2]);
+        return StateError::UPDATE_FAILED_CRITICAL;
+    }
+
+    // 気圧データを取得（圧力: Pa）
+    bool has_temperature, has_pressure;
+    int16_t baro_ret = context.baro->getSingleContResult(context.temperature_c, has_temperature, context.pressure_pa, has_pressure);
+    if(baro_ret != DPS__SUCCEEDED){
+
+        return StateError::UPDATE_FAILED_CRITICAL;
+    }
 
     // ジャイロを dps → rad/s に変換
-    float gyro_rad[3] = {
-        context.gyro_data[0] * DEG_TO_RAD,
-        context.gyro_data[1] * DEG_TO_RAD,
-        context.gyro_data[2] * DEG_TO_RAD,
-    };
+    float gyro_rad[3] = {context.gyro_data[0] * DEG_TO_RAD, context.gyro_data[1] * DEG_TO_RAD, context.gyro_data[2] * DEG_TO_RAD};
 
-    // EKF 更新（加速度は内部で正規化される）
+    // EKF 更新
     AttitudeEKF_Update(&context.ekf.value(), context.accel_data.data(), gyro_rad);
 
     // 推定角度を context に格納（単位: deg）
@@ -44,35 +48,8 @@ StateError FlightStateBase::update(StateContext& context) {
     context.angle.pitch = AttitudeEKF_GetPitch(&context.ekf.value()) * RAD_TO_DEG;
     context.angle.yaw   = AttitudeEKF_GetYaw(&context.ekf.value())   * RAD_TO_DEG;
 
-//    printf("Roll: %.2f deg, Pitch: %.2f deg, Yaw: %.2f deg\n",
-//            context.angle.roll,
-//            context.angle.pitch,
-//            context.angle.yaw);
-
-    if (context.baro.has_value()) {
-
-        float temperature_c = 0.0f;
-        float pressure_pa = 0.0f;
-        bool has_temperature = false;
-        bool has_pressure = false;
-
-        if (context.baro->getSingleContResult(temperature_c, has_temperature, pressure_pa, has_pressure) == DPS__SUCCEEDED) {
-
-            if (has_temperature) {
-
-                context.temperature_c = temperature_c;
-            }
-
-            if (has_pressure) {
-
-                context.pressure_pa = pressure_pa;
-            }
-        }
-    }
-
     // 派生クラスの処理（throttle・pid_outputをcontextに書き込む）
     StateError err = onUpdate(context);
-
     if (err != StateError::NONE) {
 
         return err;
