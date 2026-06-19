@@ -19,7 +19,7 @@ StateError EmergencyStopState::update(StateContext& context) {
         context.pwm_manager->stop();
     }
 
-    return StateError::NONE;
+    return StateError::CRITICAL_STOPPED;
 }
 
 

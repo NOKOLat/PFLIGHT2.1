@@ -3,7 +3,7 @@
 
 #include "StateManager/state_manager.hpp"
 #include "loop_manager.hpp"
-#include "isr_manager.hpp"
+#include "SBUS/isr_manager.hpp"
 #include "usart.h"
 
 StateManager state_manager(StateID::INIT);
@@ -18,19 +18,11 @@ void init(){
 
 void loop(){
 
-    static bool just_ran = false;
     static unsigned long accumulated_loop_time_us = 0;
     static uint32_t measured_loop_count = 0;
     constexpr uint32_t average_loop_count = 100;
-    const unsigned long loop_interval_us = loop_manager->getLoopTime();
 
     if (!loop_manager->isWaitNextLoop()) {
-
-        if (just_ran) {
-            printf("[WARN] update() overrun: did not complete within %lu us\r\n", loop_interval_us);
-        }
-
-        just_ran = true;
 
         const uint32_t update_start_cycle = DWT->CYCCNT;
         state_manager.update();
@@ -48,9 +40,6 @@ void loop(){
             accumulated_loop_time_us = 0;
             measured_loop_count = 0;
         }
-
-    } else {
-        just_ran = false;
     }
 
 }

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <array>
-#include "../Config/sbus_config.hpp"
+#include "../../Config/sbus_config.hpp"
 
 // ===== 3段階スイッチの状態定義 =====
 // LOW=0 が無効（OFF）、MID/HIGH が有効（ON）
