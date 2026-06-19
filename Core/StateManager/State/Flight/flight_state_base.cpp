@@ -64,6 +64,12 @@ StateError FlightStateBase::update(StateContext& context) {
         context.pwm_manager->output();
     }
 
+    //debug angle
+    //printf("[FlightStateBase] Angle: %3.3f, %3.3f, %3.3f deg\n", context.angle.roll, context.angle.pitch, context.angle.yaw);
+
+    //debug pressure
+    //context.publish_log("[FlightStateBase] Pressure: %f Pa, Temperature: %f °C", context.pressure_pa, context.temperature_c);
+
     return StateError::NONE;
 }
 
