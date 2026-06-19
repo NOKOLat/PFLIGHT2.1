@@ -11,6 +11,10 @@ void EmergencyStopState::stopMotor(StateContext& context) {
 StateError EmergencyStopState::init(StateContext& context) {
 
     stopMotor(context);
+    while(1){
+
+    	;
+    }
 
     return StateError::NONE;
 }
@@ -18,8 +22,12 @@ StateError EmergencyStopState::init(StateContext& context) {
 StateError EmergencyStopState::update(StateContext& context) {
 
     stopMotor(context);
+    while(1){
 
-    return StateError::CRITICAL_STOPPED;
+    	;
+    }
+
+    return StateError::NONE;
 }
 
 

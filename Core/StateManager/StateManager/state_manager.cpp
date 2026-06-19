@@ -38,16 +38,18 @@ UpdateResult StateManager::update() {
     bool sbus_updated = updateSbusStatus();
     if(!sbus_updated) {
 
-        state_context_.publish_log("[StateManager] SBUS update failed. Staying in current state.");
-        return UpdateResult::CONTINUE;
+        state_context_.publish_log("[StateManager] SBUS update failed.");
+        changeState(StateID::EMERGENCY_STOP);
+        return UpdateResult::SHUTDOWN;
     }
 
     // 状態の更新
     StateError update_error = current_state_->update(state_context_);
     if(update_error != StateError::NONE) {
 
-        state_context_.publish_log("[StateManager] State update() failed. Staying in current state.");
-        return UpdateResult::CONTINUE;
+        state_context_.publish_log("[StateManager] State update() failed.");
+        changeState(StateID::EMERGENCY_STOP);
+        return UpdateResult::SHUTDOWN;
     }
 
     // 状態遷移
@@ -56,8 +58,9 @@ UpdateResult StateManager::update() {
 
         if(changeState(result.next_state) == StateChangeResult::FAILED) {
 
-            state_context_.publish_log("[StateManager] State transition failed. Staying in current state.");
-            return UpdateResult::CONTINUE;
+            state_context_.publish_log("[StateManager] State transition failed.");
+            changeState(StateID::EMERGENCY_STOP);
+            return UpdateResult::SHUTDOWN;
         }
     }
 
@@ -73,14 +76,14 @@ bool StateManager::updateSbusStatus() {
     // 受信失敗
     if(sbus_result.timeout) {
 
-        state_context_.publish_log("[StateManager] SBUS timeout detected. Staying in current state.");
+        //state_context_.publish_log("[StateManager] SBUS timeout detected. Staying in current state.");
         return false;
     }
 
     // 受信切断
     if(sbus_result.failsafe) {
 
-        state_context_.publish_log("[StateManager] SBUS failsafe detected. Staying in current state.");
+        //state_context_.publish_log("[StateManager] SBUS failsafe detected. Staying in current state.");
         return false;
     }
 
@@ -98,6 +101,7 @@ StateChangeResult StateManager::changeState(StateID state_id) {
         return StateChangeResult::FAILED;
     }
 
+    // 状態の切り替え
     // 新しい状態の初期化
     StateError init_error = new_state->init(state_context_);
     if(init_error != StateError::NONE) {
@@ -106,7 +110,6 @@ StateChangeResult StateManager::changeState(StateID state_id) {
         return StateChangeResult::FAILED;
     }
 
-    // 状態の切り替え
     current_state_ = std::move(new_state);
     state_context_.publish_log("[StateManager] Next state: " + std::string(StateIDToString(state_id)));
 
