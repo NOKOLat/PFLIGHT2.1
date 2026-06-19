@@ -31,14 +31,9 @@ class StateManager {
 
         StateID                         init_state_id_;
         std::unique_ptr<StateInterface> current_state_;
-        std::unique_ptr<StateInterface> fallback_emergency_stop_;
-        bool                            use_fallback_ = false;
         StateContext                    state_context_;
 
-        void enterFallback(const std::string& reason);
         bool updateSbusStatus();
-        UpdateResult handleStateError(StateError error, StateID state_id);
-        UpdateResult handleFallback();
         StateChangeResult changeState(StateID state_id);
 };
 

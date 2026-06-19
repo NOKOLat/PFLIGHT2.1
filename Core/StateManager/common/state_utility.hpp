@@ -23,9 +23,8 @@ enum class StateID : uint8_t {
 enum class StateError : uint8_t {
 
     NONE                        = 0,
-    UPDATE_FAILED_RECOVERABLE   = 1,
-    UPDATE_FAILED_CRITICAL      = 2,
-    CRITICAL_STOPPED            = 3
+    UPDATE_FAILED_CRITICAL      = 1,
+    CRITICAL_STOPPED            = 2
 };
 
 // 遷移フラグ

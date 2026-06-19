@@ -143,21 +143,12 @@ class DisArmState : public StateInterface {
 
 // --- Error ---
 
-class ErrorState : public StateInterface {
-
-    public:
-        virtual ~ErrorState() = default;
-        StateError  init(StateContext& context) override;
-        StateError  update(StateContext& context) override;
-        StateResult evaluateNextState(StateContext& context) override;
-        StateID     getStateID() const override;
-};
-
 // EMERGENCY_STOP: StateManager フォールバック専用
 class EmergencyStopState : public StateInterface {
 
     public:
         virtual ~EmergencyStopState() = default;
+        static void stopMotor(StateContext& context);
         StateError  init(StateContext& context) override;
         StateError  update(StateContext& context) override;
         StateResult evaluateNextState(StateContext& context) override;

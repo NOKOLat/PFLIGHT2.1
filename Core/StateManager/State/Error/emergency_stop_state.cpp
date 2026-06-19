@@ -1,23 +1,23 @@
 #include "../state_headers.hpp"
 
-StateError EmergencyStopState::init(StateContext& context) {
+void EmergencyStopState::stopMotor(StateContext& context) {
 
-    // 緊急停止: モーターを即時停止する
     if (context.pwm_manager) {
 
         context.pwm_manager->stop();
     }
+}
+
+StateError EmergencyStopState::init(StateContext& context) {
+
+    stopMotor(context);
 
     return StateError::NONE;
 }
 
 StateError EmergencyStopState::update(StateContext& context) {
 
-    // 緊急停止: モーターを即時停止する
-    if (context.pwm_manager) {
-
-        context.pwm_manager->stop();
-    }
+    stopMotor(context);
 
     return StateError::CRITICAL_STOPPED;
 }
@@ -30,6 +30,6 @@ StateResult EmergencyStopState::evaluateNextState(StateContext& context) {
 
 
 StateID EmergencyStopState::getStateID() const {
-    
+
     return StateID::EMERGENCY_STOP;
 }
