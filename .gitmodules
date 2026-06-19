@@ -15,3 +15,6 @@
 	path = Core/Lib/1DoF_PID
 	url = https://github.com/NOKOLat/1DoF_PID.git
 	branch = master
+[submodule "Core/Lib/STM32_DPS368"]
+	path = Core/Lib/STM32_DPS368
+	url = https://github.com/NOKOLat/STM32_DPS368.git
