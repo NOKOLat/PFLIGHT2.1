@@ -2,13 +2,13 @@
 
 ## Summary
 - 既存の「姿勢EKF + 高度KF」のカスケードをやめ、`IMU + 気圧` を1つの統合EKFで推定する。
-- 旧 `Altitude` / `AttitudeEKF_t` は削除せず残すが、StateManagerからは使わない。
+- 旧 `Altitude` / `AttitudeEKF_t` は削除し、`NavigationEKF` に一本化する。
 - 新EKFは内部をrad/quaternionで持ち、既存PID互換のため `StateContext::angle` にはdeg、`altitude_data` には `[高度m, 鉛直速度m/s, 鉛直加速度m/s^2]` を出す。
 
 ## Key Changes
 - 新規ライブラリを `Core/Lib/Navigation_EKF` に追加する。
   - 公開APIは `NavigationEKF::Init(dt)`, `CalibrateSample(accel, gyro, pressure)`, `IsCalibrated()`, `Update(accel, gyro_rad, pressure)`, `GetAnglesDeg(out3)`, `GetAltitudeData(out3)` とする。
-  - 専用固定配列の小型行列演算を同ライブラリ内に持ち、既存 `IMU_EKF/matrix.h` と `konfig.h` のサイズは変更しない。
+  - 専用固定配列の小型行列演算を同ライブラリ内に持ち、外部の行列ライブラリには依存しない。
 - 誤差状態は以下の9次元で固定する。
   - `姿勢誤差3軸,vz,z,bgx,bgy,bgz,baz`
   - EKF更新対象: quaternionは更新後に必ず正規化する。
@@ -19,7 +19,7 @@
   - 観測: 正規化accelの重力方向3軸 + 気圧高度1軸。
   - 気圧高度はキャリブレーション平均圧力を0m基準として `44330 * (1 - pow(p / p0, 0.1903))` で変換する。
 - 加速度観測は動的ゲートを入れる。
-  - `abs(norm(accel) - 9.81)` が小さい時は通常R。
+  - `abs(norm(accel) - 9.80665)` が小さい時は通常R。
   - 閾値を超える時は加速度観測Rを大きくして、飛行加速度でroll/pitchを壊しにくくする。
 - 気圧観測は毎回有効。ただしpressureが0以下/NaNなら気圧更新をスキップして予測のみ継続。
   - DPS368が新しいpressureを返した周期だけ気圧更新し、古い値を再利用しない。

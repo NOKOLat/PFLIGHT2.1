@@ -6,7 +6,7 @@
 
 | ファイル | 変更できる内容 | 現在値 / 例 | 主な使用先 |
 |---|---|---|---|
-| `Core/Config/system_config_values.h` | メインループ周期 | `10 ms`, `10000 us`, `0.01 s`, `100 Hz` | `LoopManager` の周期制御、`InitState` の EKF 初期化、`CascadePIDManager` の `dt`、`Core/Inc/konfig.h` 経由の IMU_EKF |
+| `Core/Config/system_config_values.h` | メインループ周期 | `10 ms`, `10000 us`, `0.01 s`, `100 Hz` | `LoopManager` の周期制御、`InitState` の Navigation EKF 初期化、`CascadePIDManager` の `dt` |
 | `Core/Config/sbus_config.hpp` | SBUS チャンネル割り当て | throttle=2, pitch=0, roll=1, yaw=3, drop=4, arm=5, safety=6, auto=7, debug=8/9 | `Core/Inc/sbus_rescaler.hpp` の `SBUSChannel` と `rescale()` |
 | `Core/Config/sbus_config.hpp` | SBUS 入力範囲・スイッチ閾値 | min=360, mid=1024, max=1696, low=500, high=1500 | スロットル 0-100%、pitch/roll/yaw -100-100%、3段スイッチ LOW/MID/HIGH への変換 |
 | `Core/Config/sbus_config.hpp` | プロポの trim / subtrim | 各軸 0 | `THROTTLE_MIN/MAX`, `PITCH/ROLL/YAW_MIN/MID/MAX` に反映され、SBUS 変換の中心・端点を補正 |
