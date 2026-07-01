@@ -18,3 +18,6 @@
 [submodule "Core/Lib/Navigation_EKF"]
 	path = Core/Lib/Navigation_EKF
 	url = https://github.com/NOKOLat/Navigation_EKF.git
+[submodule "Core/Lib/MovingAverage"]
+	path = Core/Lib/MovingAverage
+	url = https://github.com/NOKOLat/MovingAverage.git

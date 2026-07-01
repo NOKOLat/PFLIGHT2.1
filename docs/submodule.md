@@ -2,7 +2,7 @@
 
 このドキュメントは、`Core/Lib` 配下に配置されている外部ライブラリと、このプログラム内での役割をまとめたものです。
 
-URL と branch 情報は `.gitmodules` を基準にしています。現在 `Core/Lib` 直下に実体があるサブモジュールは 6 件です。
+URL と branch 情報は `.gitmodules` を基準にしています。現在 `Core/Lib` 直下に実体があるサブモジュールは 7 件です。
 
 ## 一覧
 
@@ -14,6 +14,7 @@ URL と branch 情報は `.gitmodules` を基準にしています。現在 `Cor
 | `Core/Lib/1DoF_PID` | [NOKOLat/1DoF_PID](https://github.com/NOKOLat/1DoF_PID.git) | `master` | `8183890` | 1 軸 PID 制御器。姿勢制御用の Cascade PID の構成要素 |
 | `Core/Lib/STM32_DPS368` | [NOKOLat/STM32_DPS368](https://github.com/NOKOLat/STM32_DPS368.git) | 未指定 | `bfd2016` | DPS368から気圧・温度を取得するセンサードライバ |
 | `Core/Lib/Navigation_EKF` | [NOKOLat/Navigation_EKF](https://github.com/NOKOLat/Navigation_EKF.git) | 未指定 | `1f2c387` | IMUと気圧から姿勢角・相対高度・鉛直速度・鉛直加速度を推定するEKF |
+| `Core/Lib/MovingAverage` | [NOKOLat/MovingAverage](https://github.com/NOKOLat/MovingAverage.git) | 未指定 | `d0f0e02` | 固定長バッファを使った移動平均 |
 
 ## 各サブモジュールの役割
 
@@ -74,6 +75,12 @@ URL と branch 情報は `.gitmodules` を基準にしています。現在 `Cor
 - 相対高度、鉛直速度、鉛直加速度の出力
 
 このプログラムでは`CalibrationState`が新しいIMUサンプルと気圧を`CalibrateSample()`へ渡し、校正完了後に`FlightStateBase`が100 Hzで`Update()`を呼び出します。
+
+### MovingAverage
+
+`Core/Lib/MovingAverage`は、固定長の`std::array`をリングバッファとして使うヘッダーオンリーライブラリです。
+
+このプログラムでは`NavigationEKF`が`MovingAverage<float, 10>`を保持し、DPS368の気圧を10サンプルで平均化してから気圧高度へ変換します。校正完了時に全要素を基準気圧で初期化するため、起動直後にゼロ値が平均へ混ざりません。
 
 ### STM32_Motor-Servo_Driver
 

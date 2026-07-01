@@ -23,7 +23,7 @@
   - 閾値を超える時は加速度観測Rを大きくして、飛行加速度でroll/pitchを壊しにくくする。
 - 気圧観測は毎回有効。ただしpressureが0以下/NaNなら気圧更新をスキップして予測のみ継続。
   - DPS368が新しいpressureを返した周期だけ気圧更新し、古い値を再利用しない。
-  - 仮実装では直近10ループの有効なpressureをリングバッファで移動平均してから高度へ変換する。
+  - `MovingAverage<float, 10>`で直近10ループの有効なpressureを移動平均してから高度へ変換する。
   - 直前の気圧移動平均高度との差が10 mを超える単発の気圧高度は外れ値として棄却する。
 - `StateContext` は `std::optional<NavigationEKF> navigation_ekf` に置換する。
   - `altitude_estimator` と `ekf` はStateManagerから参照しない。
