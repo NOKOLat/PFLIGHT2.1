@@ -1,12 +1,12 @@
 #ifndef STATE_CONTEXT_HPP
 #define STATE_CONTEXT_HPP
 
+#include <array>
 #include <cstdint>
 #include <functional>
-#include <optional>
 #include <memory>
+#include <optional>
 #include <string>
-#include <array>
 #include "stm32f7xx_hal.h"
 #include "SBUS/sbus.h"
 #include "SBUS/sbus_rescaler.hpp"
@@ -14,14 +14,14 @@
 #include "gpio.h"
 #include "ICM42688P/ICM42688P.h"
 #include "STM32_DPS368/Dps3xx.h"
-#include "IMU_EKF/attitude_ekf.h"
+#include "Navigation_EKF/navigation_ekf.h"
 #include "../../Utility/PwmManager/pwm_manager.hpp"
 #include "../../Utility/CascadePID/cascade_pid_manager.hpp"
 
 struct AngleData {
-    float roll  = 0.0f;  // rad
-    float pitch = 0.0f;  // rad
-    float yaw   = 0.0f;  // rad
+    float roll  = 0.0f;  // deg
+    float pitch = 0.0f;  // deg
+    float yaw   = 0.0f;  // deg
 };
 
 struct StateContext {
@@ -30,35 +30,31 @@ struct StateContext {
     std::function<void(const std::string&)> publish_log = [](const std::string&) {};
 
     // SBUS
-    nokolat::SBUS            sbus_receiver;
-    UART_HandleTypeDef*      sbus_uart  = &huart5;
-    UART_HandleTypeDef*      debug_sbus_uart  = &huart2; // デバッグ用（必要に応じて変更）
+    nokolat::SBUS sbus_receiver;
+    UART_HandleTypeDef* sbus_uart = &huart5;
+    UART_HandleTypeDef* debug_sbus_uart = &huart2;
     nokolat::RescaledSBUSData sbus_data = {};
 
-    // ICM42688P（遅延初期化: InitStateでemplace）
+    // ICM42688P
     std::optional<ICM42688P> imu = std::nullopt;
     std::array<float, 3> accel_data = {};
     std::array<float, 3> gyro_data = {};
 
-    // DPS368 pressure sensor (initialized in InitState)
+    // DPS368 pressure sensor
     std::optional<Dps3xx> baro = std::nullopt;
     float pressure_pa = 0.0f;
     float temperature_c = 0.0f;
 
-    // EKF（遅延初期化: FlightStateBase::initでemplace）
-    std::optional<AttitudeEKF_t> ekf = std::nullopt;
+    // Navigation EKF
+    std::optional<NavigationEKF> navigation_ekf = std::nullopt;
+    std::array<float, 3> altitude_data = {};  // [altitude(m), velocity(m/s), accel(m/s^2)]
     AngleData angle = {};
 
-    // PwmManager（遅延初期化: InitStateでmake_unique）
+    // PWM and control
     std::unique_ptr<PwmManager> pwm_manager = nullptr;
-
-    // CascadePIDManager（遅延初期化: InitStateでmake_unique）
     std::unique_ptr<CascadePIDManager> cascade_pid_manager = nullptr;
-
-    // PID出力（FlightState::onUpdate()で計算）
     std::array<float, 3> pid_output = {};  // [pitch, roll, yaw]
     float throttle = 0.0f;
 };
-
 
 #endif // STATE_CONTEXT_HPP

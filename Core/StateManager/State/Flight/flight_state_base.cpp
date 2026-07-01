@@ -5,7 +5,7 @@
 
 StateError FlightStateBase::init(StateContext& context) {
 
-    if (context.cascade_pid_manager) {
+    if(context.cascade_pid_manager){
 
         context.cascade_pid_manager->reset();
     }
@@ -19,56 +19,62 @@ StateError FlightStateBase::init(StateContext& context) {
 
 StateError FlightStateBase::update(StateContext& context) {
 
-    constexpr float RAD_TO_DEG = 57.29577951308232f;
     constexpr float DEG_TO_RAD = 0.017453292519943295f;
 
-    // imuデータを取得（加速度: m/s², ジャイロ: dps）
     uint8_t ret = context.imu->GetData(context.accel_data.data(), context.gyro_data.data());
     if(ret != 0){
 
         return StateError::UPDATE_FAILED_CRITICAL;
     }
 
-    // 気圧データを取得（圧力: Pa）
-    bool has_temperature, has_pressure;
+    bool has_temperature = false;
+    bool has_pressure = false;
     int16_t baro_ret = context.baro->getSingleContResult(context.temperature_c, has_temperature, context.pressure_pa, has_pressure);
     if(baro_ret != DPS__SUCCEEDED){
 
         return StateError::UPDATE_FAILED_CRITICAL;
     }
 
-    // ジャイロを dps → rad/s に変換
-    float gyro_rad[3] = {context.gyro_data[0] * DEG_TO_RAD, context.gyro_data[1] * DEG_TO_RAD, context.gyro_data[2] * DEG_TO_RAD};
+    float gyro_rad[3] = {
+        context.gyro_data[0] * DEG_TO_RAD,
+        context.gyro_data[1] * DEG_TO_RAD,
+        context.gyro_data[2] * DEG_TO_RAD
+    };
 
-    // EKF 更新
-    AttitudeEKF_Update(&context.ekf.value(), context.accel_data.data(), gyro_rad);
+    float pressure_for_ekf = -1.0f;
+    if(has_pressure && (context.pressure_pa > 0.0f) && std::isfinite(context.pressure_pa)){
 
-    // 推定角度を context に格納（単位: deg）
-    context.angle.roll  = AttitudeEKF_GetRoll(&context.ekf.value())  * RAD_TO_DEG;
-    context.angle.pitch = AttitudeEKF_GetPitch(&context.ekf.value()) * RAD_TO_DEG;
-    context.angle.yaw   = AttitudeEKF_GetYaw(&context.ekf.value())   * RAD_TO_DEG;
+        pressure_for_ekf = context.pressure_pa;
+    }
 
-    // 派生クラスの処理（throttle・pid_outputをcontextに書き込む）
+    if(!context.navigation_ekf->Update(context.accel_data.data(), gyro_rad, pressure_for_ekf)){
+
+        return StateError::UPDATE_FAILED_CRITICAL;
+    }
+
+    float angle_data[3] = {};
+    context.navigation_ekf->GetAnglesDeg(angle_data);
+    context.angle.roll = angle_data[0];
+    context.angle.pitch = angle_data[1];
+    context.angle.yaw = angle_data[2];
+    context.navigation_ekf->GetAltitudeData(context.altitude_data.data());
+
     StateError err = onUpdate(context);
-    if (err != StateError::NONE) {
+    if(err != StateError::NONE){
 
         return err;
     }
 
-    // ミキシング計算・PWM出力(2ループに1回)
     pwm_tick_ = !pwm_tick_;
-    if (pwm_tick_) {
+    if(pwm_tick_){
 
-    	// センサーの向き依存の方向修正をマイナスでやる
         context.pwm_manager->mix(context.throttle, context.pid_output[0], -context.pid_output[1], -context.pid_output[2]);
         context.pwm_manager->output();
     }
 
-    //debug angle
-    //printf("[FlightStateBase] Angle: %3.3f, %3.3f, %3.3f deg\n", context.angle.roll, context.angle.pitch, context.angle.yaw);
-
-    //debug pressure
-    //context.publish_log("[FlightStateBase] Pressure: %f Pa, Temperature: %f °C", context.pressure_pa, context.temperature_c);
+    //printf("[Accel] X: %.3f m/s^2, Y: %.3f m/s^2, Z: %.3f m/s^2\n", context.accel_data[0], context.accel_data[1], context.accel_data[2]);
+    printf("[FlightStateBase] Altitude: %.3f m, Velocity: %.3f m/s, Accel: %.3f m/s^2\n", context.altitude_data[0], context.altitude_data[1], context.altitude_data[2]);
+    //printf("[FlightStateBase] Roll: %.2f deg, Pitch: %.2f deg, Yaw: %.2f deg\n", context.angle.roll, context.angle.pitch, context.angle.yaw);
 
     return StateError::NONE;
 }

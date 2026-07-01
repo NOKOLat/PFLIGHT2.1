@@ -5,9 +5,6 @@
 [submodule "Core/Lib/ICM42688P"]
 	path = Core/Lib/ICM42688P
 	url = https://github.com/NOKOLat/STM32_ICM42688P.git
-[submodule "Core/Lib/IMU_EKF"]
-	path = Core/Lib/IMU_EKF
-	url = https://github.com/NOKOLat/IMU_EKF.git
 [submodule "Core/Lib/STM32_Motor-Servo_Driver"]
 	path = Core/Lib/STM32_Motor-Servo_Driver
 	url = https://github.com/NOKOLat/STM32_Motor-Servo_Driver.git
@@ -18,3 +15,9 @@
 [submodule "Core/Lib/STM32_DPS368"]
 	path = Core/Lib/STM32_DPS368
 	url = https://github.com/NOKOLat/STM32_DPS368.git
+[submodule "Core/Lib/Navigation_EKF"]
+	path = Core/Lib/Navigation_EKF
+	url = https://github.com/NOKOLat/Navigation_EKF.git
+[submodule "Core/Lib/MovingAverage"]
+	path = Core/Lib/MovingAverage
+	url = https://github.com/NOKOLat/MovingAverage.git
