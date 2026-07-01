@@ -7,7 +7,7 @@
 
 ## Key Changes
 - 新規ライブラリを `Core/Lib/Navigation_EKF` に追加する。
-  - 公開APIは `NavigationEKF::Init(dt)`, `CalibrateSample(accel, gyro, pressure)`, `IsCalibrated()`, `Update(accel, gyro_rad, pressure)`, `GetAnglesDeg(out3)`, `GetAltitudeData(out3)` とする。
+  - 公開APIは `NavigationEKF::Init(dt, config)`, `CalibrateSample(accel, gyro, pressure)`, `IsCalibrated()`, `Update(accel, gyro_rad, pressure)`, `GetAnglesDeg(out3)`, `GetAltitudeData(out3)` とする。
   - 専用固定配列の小型行列演算を同ライブラリ内に持ち、外部の行列ライブラリには依存しない。
 - 誤差状態は以下の9次元で固定する。
   - `姿勢誤差3軸,vz,z,bgx,bgy,bgz,baz`
@@ -39,6 +39,7 @@
 - v1では実装ミスを減らすため、状態遷移ヤコビアンFと観測ヤコビアンHは有限差分で計算する。
 - 共分散更新は `P = FPF^T + Q`, `K = PH^T(HPH^T+R)^-1`, `x = x + K residual` とJoseph形式 `P = (I-KH)P(I-KH)^T + KRK^T` を使う。
 - 静止時に気圧高度の揺れが鉛直速度へ回り込まない初期調整値として、`Q_VELOCITY = 1.0e-5`, `Q_ALTITUDE = 1.0e-5`, `R_BARO = 2.5e-1` を使う。
+- 静止ログ11,762サンプルの再生結果に基づき、鉛直加速度バイアスの過追従を抑えるため`Q_ACCEL_Z_BIAS = 3.0e-6`を使う。
 - DPS368は温度16 Hz・OSR 1、気圧64 Hz・OSR 4で動作させ、最大レート・OSR 1よりも気圧ノイズを抑える。
 - 角度出力はquaternionからroll/pitch/yawを算出し、StateContextへdegで保存する。
 - `STM32_AI/CODING_GUIDE.md` の既存スタイルに合わせ、4スペース、関数前Doxygen風コメント、同一行 `{` を使う。

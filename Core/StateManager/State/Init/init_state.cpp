@@ -1,5 +1,6 @@
 #include "../state_headers.hpp"
 #include "../../../Config/system_config.hpp"
+#include "../../../Config/navigation_ekf_config.hpp"
 #include "../Config/sensor_config.hpp"
 #include "../../../Utility/PwmManager/dualcopter_pwm_manager.hpp"
 #include "i2c.h"
@@ -75,7 +76,7 @@ StateError InitState::update(StateContext& context) {
     constexpr float loop_time_s = SystemConfig::MAIN_LOOP_PERIOD_S;
 
     context.navigation_ekf.emplace();
-    context.navigation_ekf->Init(loop_time_s);
+    context.navigation_ekf->Init(loop_time_s, NavigationEkfConfig::CONFIG);
     context.altitude_data.fill(0.0f);
 
     context.pwm_manager = std::make_unique<DualcopterPwmManager>();
