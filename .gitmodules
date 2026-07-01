@@ -15,3 +15,6 @@
 [submodule "Core/Lib/STM32_DPS368"]
 	path = Core/Lib/STM32_DPS368
 	url = https://github.com/NOKOLat/STM32_DPS368.git
+[submodule "Core/Lib/Navigation_EKF"]
+	path = Core/Lib/Navigation_EKF
+	url = https://github.com/NOKOLat/Navigation_EKF.git

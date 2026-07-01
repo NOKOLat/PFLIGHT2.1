@@ -2,7 +2,7 @@
 
 このドキュメントは、`Core/Lib` 配下に配置されている外部ライブラリと、このプログラム内での役割をまとめたものです。
 
-URL と branch 情報は `.gitmodules` を基準にしています。現在 `Core/Lib` 直下に実体があるサブモジュールは 5 件です。
+URL と branch 情報は `.gitmodules` を基準にしています。現在 `Core/Lib` 直下に実体があるサブモジュールは 6 件です。
 
 ## 一覧
 
@@ -13,6 +13,7 @@ URL と branch 情報は `.gitmodules` を基準にしています。現在 `Cor
 | `Core/Lib/STM32_Motor-Servo_Driver` | [NOKOLat/STM32_Motor-Servo_Driver](https://github.com/NOKOLat/STM32_Motor-Servo_Driver) | 未指定 | `96c17a7` | STM32 HAL タイマを使った PWM、モータ、サーボ出力制御 |
 | `Core/Lib/1DoF_PID` | [NOKOLat/1DoF_PID](https://github.com/NOKOLat/1DoF_PID.git) | `master` | `8183890` | 1 軸 PID 制御器。姿勢制御用の Cascade PID の構成要素 |
 | `Core/Lib/STM32_DPS368` | [NOKOLat/STM32_DPS368](https://github.com/NOKOLat/STM32_DPS368.git) | 未指定 | `bfd2016` | DPS368から気圧・温度を取得するセンサードライバ |
+| `Core/Lib/Navigation_EKF` | [NOKOLat/Navigation_EKF](https://github.com/NOKOLat/Navigation_EKF.git) | 未指定 | `1f2c387` | IMUと気圧から姿勢角・相対高度・鉛直速度・鉛直加速度を推定するEKF |
 
 ## 各サブモジュールの役割
 
@@ -60,6 +61,19 @@ URL と branch 情報は `.gitmodules` を基準にしています。現在 `Cor
 - 補正済み気圧・温度の取得
 
 このプログラムでは`InitState`で連続測定を開始し、`CalibrationState`と`FlightStateBase`が新しい気圧値を`NavigationEKF`へ渡します。
+
+### Navigation_EKF
+
+`Core/Lib/Navigation_EKF` は、ICM42688Pの加速度・角速度とDPS368の気圧を統合する誤差状態EKFです。
+
+主な機能は次の通りです。
+
+- 静止時のジャイロバイアス、鉛直加速度バイアス、基準気圧の校正
+- クォータニオンによる姿勢推定とroll・pitch・yaw角の出力
+- 気圧10サンプル移動平均を用いた相対高度補正
+- 相対高度、鉛直速度、鉛直加速度の出力
+
+このプログラムでは`CalibrationState`が新しいIMUサンプルと気圧を`CalibrateSample()`へ渡し、校正完了後に`FlightStateBase`が100 Hzで`Update()`を呼び出します。
 
 ### STM32_Motor-Servo_Driver
 
