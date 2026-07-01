@@ -9,8 +9,8 @@
 - 新規ライブラリを `Core/Lib/Navigation_EKF` に追加する。
   - 公開APIは `NavigationEKF::Init(dt)`, `CalibrateSample(accel, gyro, pressure)`, `IsCalibrated()`, `Update(accel, gyro_rad, pressure)`, `GetAnglesDeg(out3)`, `GetAltitudeData(out3)` とする。
   - 専用固定配列の小型行列演算を同ライブラリ内に持ち、既存 `IMU_EKF/matrix.h` と `konfig.h` のサイズは変更しない。
-- 状態は以下の10次元で固定する。
-  - nominal: `q0,q1,q2,q3,vz,z,bgx,bgy,bgz,baz,baro_bias`
+- 誤差状態は以下の9次元で固定する。
+  - `姿勢誤差3軸,vz,z,bgx,bgy,bgz,baz`
   - EKF更新対象: quaternionは更新後に必ず正規化する。
   - yawは絶対補正なしのgyro積分として出力する。
 - センサモデルは以下に固定する。
@@ -21,19 +21,25 @@
 - 加速度観測は動的ゲートを入れる。
   - `abs(norm(accel) - 9.81)` が小さい時は通常R。
   - 閾値を超える時は加速度観測Rを大きくして、飛行加速度でroll/pitchを壊しにくくする。
-  - 気圧観測は毎回有効。ただしpressureが0以下/NaNなら気圧更新をスキップして予測のみ継続。
+- 気圧観測は毎回有効。ただしpressureが0以下/NaNなら気圧更新をスキップして予測のみ継続。
+  - DPS368が新しいpressureを返した周期だけ気圧更新し、古い値を再利用しない。
+  - 仮実装では直近10ループの有効なpressureをリングバッファで移動平均してから高度へ変換する。
+  - 直前の気圧移動平均高度との差が10 mを超える単発の気圧高度は外れ値として棄却する。
 - `StateContext` は `std::optional<NavigationEKF> navigation_ekf` に置換する。
   - `altitude_estimator` と `ekf` はStateManagerから参照しない。
   - `AngleData` のコメントを実態に合わせてdegへ修正する。
 - `InitState` / `CalibrationState` / `FlightStateBase` を新EKFに差し替える。
-  - CalibrationStateで静止サンプル100回を集め、gyro bias、気圧基準、初期roll/pitchを決める。
+  - CalibrationStateで100 Hzの実時間に合わせて新しい静止サンプル100回を集め、gyro bias、気圧基準、初期roll/pitchを決める。
+  - 加速度ノルムまたは角速度が静止条件から外れるサンプルと、新しい気圧値がない周期は校正回数に含めない。
   - FlightStateBaseではIMU/気圧取得後、gyroをdpsからrad/sへ変換して `NavigationEKF::Update` を1回だけ呼ぶ。
   - 出力を `context.angle` と `context.altitude_data` に格納して、既存PIDとPWM処理はそのまま使う。
 
 ## Implementation Notes
-- EKFは10次元状態、最大観測4次元の固定配列で実装する。
+- EKFは9次元誤差状態、最大観測4次元の固定配列で実装する。
 - v1では実装ミスを減らすため、状態遷移ヤコビアンFと観測ヤコビアンHは有限差分で計算する。
-- 共分散更新は通常のEKF式 `P = FPF^T + Q`, `K = PH^T(HPH^T+R)^-1`, `x = x + K residual`, `P = (I-KH)P` を使う。
+- 共分散更新は `P = FPF^T + Q`, `K = PH^T(HPH^T+R)^-1`, `x = x + K residual` とJoseph形式 `P = (I-KH)P(I-KH)^T + KRK^T` を使う。
+- 静止時に気圧高度の揺れが鉛直速度へ回り込まない初期調整値として、`Q_VELOCITY = 1.0e-5`, `Q_ALTITUDE = 1.0e-5`, `R_BARO = 2.5e-1` を使う。
+- DPS368は温度16 Hz・OSR 1、気圧64 Hz・OSR 4で動作させ、最大レート・OSR 1よりも気圧ノイズを抑える。
 - 角度出力はquaternionからroll/pitch/yawを算出し、StateContextへdegで保存する。
 - `STM32_AI/CODING_GUIDE.md` の既存スタイルに合わせ、4スペース、関数前Doxygen風コメント、同一行 `{` を使う。
 

@@ -5,21 +5,20 @@
 #include "i2c.h"
 #include "STM32_DPS368/util/dps_config.h"
 
-// icm42688p用のSPI書き込み関数
 static uint8_t icm_spi_write(uint8_t reg_addr, uint8_t* tx_buffer, uint8_t len) {
 
-	HAL_I2C_Mem_Write(&hi2c1, 0x69 << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, tx_buffer, len, 100);
-    return 0;
+    HAL_StatusTypeDef status = HAL_I2C_Mem_Write(&hi2c1, 0x69 << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, tx_buffer, len, 100);
+
+    return (status == HAL_OK) ? 0 : 1;
 }
 
-// icm42688p用のSPI読み取り関数
 static uint8_t icm_spi_read(uint8_t reg_addr, uint8_t* rx_buffer, uint8_t len) {
 
-	HAL_I2C_Mem_Read(&hi2c1, 0x69 << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, rx_buffer, len, 100);
-	return 0;
+    HAL_StatusTypeDef status = HAL_I2C_Mem_Read(&hi2c1, 0x69 << 1, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, rx_buffer, len, 100);
+
+    return (status == HAL_OK) ? 0 : 1;
 }
 
-// icm42688p用のログ関数
 static void icm_log(const char* msg) {
 
     printf("[ICM42688P] %s\n", msg);
@@ -34,30 +33,27 @@ StateError InitState::init(StateContext& context) {
 
 StateError InitState::update(StateContext& context) {
 
-    if (initialized_) {
+    if(initialized_){
 
         printf("[InitState] Already initialized\n");
         return StateError::NONE;
     }
 
-    // icm42688pの初期化
     context.imu.emplace(icm_spi_write, icm_spi_read, icm_log);
 
-    // 通信チェック
-    if (context.imu->Connection()) {
+    if(context.imu->Connection()){
 
         printf("ICM42688p Not Found\n");
         return StateError::UPDATE_FAILED_CRITICAL;
     }
 
-    // センサーの設定
-    if (context.imu->AccelConfig(::ICM42688P::ACCEL_Mode::LowNoize, ::ICM42688P::ACCEL_SCALE::SCALE02g, ::ICM42688P::ACCEL_ODR::ODR00100hz, ::ICM42688P::ACCEL_DLPF::ODR40) != 0) {
+    if(context.imu->AccelConfig(::ICM42688P::ACCEL_Mode::LowNoize, ::ICM42688P::ACCEL_SCALE::SCALE02g, ::ICM42688P::ACCEL_ODR::ODR00100hz, ::ICM42688P::ACCEL_DLPF::ODR40) != 0){
 
         printf("ICM42688p Accel Config Failed\n");
         return StateError::UPDATE_FAILED_CRITICAL;
     }
 
-    if (context.imu->GyroConfig(::ICM42688P::GYRO_MODE::LowNoize, ::ICM42688P::GYRO_SCALE::Dps0250, ::ICM42688P::GYRO_ODR::ODR00100hz, ::ICM42688P::GYRO_DLPF::ODR40) != 0) {
+    if(context.imu->GyroConfig(::ICM42688P::GYRO_MODE::LowNoize, ::ICM42688P::GYRO_SCALE::Dps0250, ::ICM42688P::GYRO_ODR::ODR00100hz, ::ICM42688P::GYRO_DLPF::ODR40) != 0){
 
         printf("ICM42688p Gyro Config Failed\n");
         return StateError::UPDATE_FAILED_CRITICAL;
@@ -66,35 +62,23 @@ StateError InitState::update(StateContext& context) {
     context.baro.emplace();
     context.baro->begin(&hi2c1);
 
-    if (context.baro->startMeasureBothCont(
-    		DPS__MEASUREMENT_RATE_128,
+    if(context.baro->startMeasureBothCont(
+            DPS__MEASUREMENT_RATE_16,
             DPS__OVERSAMPLING_RATE_1,
-            DPS__MEASUREMENT_RATE_128,
-            DPS__OVERSAMPLING_RATE_1) != DPS__SUCCEEDED) {
+            DPS__MEASUREMENT_RATE_64,
+            DPS__OVERSAMPLING_RATE_4) != DPS__SUCCEEDED){
 
         printf("DPS368 Init Failed\n");
         return StateError::UPDATE_FAILED_CRITICAL;
     }
 
-    // Altitude estimator 初期化
-    context.altitude_estimator.emplace();
-    context.altitude_estimator->Init();
-    context.altitude_data.fill(0.0f);
-
     constexpr float loop_time_s = SystemConfig::MAIN_LOOP_PERIOD_S;
 
-    // EKF 遅延初期化
-    context.ekf.emplace();
-    if (!AttitudeEKF_Init(&context.ekf.value(), loop_time_s)) {
+    context.navigation_ekf.emplace();
+    context.navigation_ekf->Init(loop_time_s);
+    context.altitude_data.fill(0.0f);
 
-        printf("EKF Init Failed\n");
-        return StateError::UPDATE_FAILED_CRITICAL;
-    }
-
-    // PwmManager 初期化
     context.pwm_manager = std::make_unique<DualcopterPwmManager>();
-
-    // CascadePIDManager 初期化（FlightStateで使用）
     context.cascade_pid_manager = std::make_unique<CascadePIDManager>(loop_time_s);
 
     initialized_ = true;
