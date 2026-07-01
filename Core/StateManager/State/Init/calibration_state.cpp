@@ -4,7 +4,7 @@
 
 StateError CalibrationState::init(StateContext& context) {
 
-    constexpr uint16_t IMU_CALIBRATION_SAMPLE_COUNT = 100;
+    constexpr uint16_t IMU_CALIBRATION_SAMPLE_COUNT = 500;
 
     if(context.imu->StartCalibration(IMU_CALIBRATION_SAMPLE_COUNT) != 0){
 
