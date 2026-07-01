@@ -62,7 +62,7 @@ StateError CalibrationState::update(StateContext& context) {
         return StateError::UPDATE_FAILED_CRITICAL;
     }
 
-    if(!has_pressure){
+    if(!has_pressure || !(context.pressure_pa > 0.0f)){
 
         return StateError::NONE;
     }
